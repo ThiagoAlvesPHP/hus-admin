@@ -266,3 +266,27 @@ function alterar_nome_menu_acf()
 }
 
 add_action('admin_menu', 'alterar_nome_menu_acf');
+
+// criação de nova rota para tratamento de envio de email
+add_action('rest_api_init', function () {
+	register_rest_route('contato/v1', '/enviar-email/', array(
+		'methods' => 'GET',
+		'callback' => 'enviar_email_contato',
+	));
+});
+
+function enviar_email_contato($data)
+{
+	$params = $data->get_params();
+
+	$assunto = 'Wordpress HUS';
+	$destinatario = 'thicoalves@ltdeveloper.com.br';
+	$headers[] = 'Content-Type: text/html; charset=UTF-8';
+	$headers[] = 'From: ' . $params['name'] . ' <' . $params['email'] . '>';
+
+	if (wp_mail($destinatario, $assunto, $params['message'], $headers)) {
+		echo 'E-mail enviado com sucesso!';
+	} else {
+		echo 'Erro ao enviar o e-mail.';
+	}
+}
