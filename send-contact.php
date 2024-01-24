@@ -1,5 +1,9 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type");
+// header("Access-Control-Allow-Methods: POST");
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -93,7 +97,13 @@ try {
     $mail->Body    = $html;
 
     $mail->send();
-    echo 'Mensagem enviada com sucesso!';
+    echo json_encode([
+        "status"    => true,
+        "message"   => "E-mail enviado com sucesso!"
+    ]);
 } catch (Exception $e) {
-    echo "Erro ao enviar mensagem: {$mail->ErrorInfo}";
+    echo json_encode([
+        "status"    => false,
+        "message"   => "Erro ao enviar mensagem: {$mail->ErrorInfo}"
+    ]);
 }

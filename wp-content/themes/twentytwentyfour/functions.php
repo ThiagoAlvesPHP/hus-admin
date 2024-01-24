@@ -268,34 +268,26 @@ function alterar_nome_menu_acf()
 add_action('admin_menu', 'alterar_nome_menu_acf');
 
 // criação de nova rota para tratamento de envio de email
-// add_action('rest_api_init', function () {
-// 	register_rest_route('contato/v1', '/enviar-email/', array(
-// 		'methods' => 'POST',
-// 		'callback' => 'enviar_email_contato',
-// 	));
-// });
+add_action('rest_api_init', function () {
+	register_rest_route('contato/v1', '/enviar-email/', array(
+		'methods' => 'POST',
+		'callback' => 'enviar_email_contato',
+	));
+});
 
-// require './vendor/autoload.php';
-// use PHPMailer\PHPMailer\PHPMailer;
-// use PHPMailer\PHPMailer\Exception;
-// $mail = new PHPMailer(true);
+function enviar_email_contato($data)
+{
+	$params = $data->get_params();
 
-// function enviar_email_contato($data)
-// {
-// 	// $mail = new PHPMailer(true);
+	$assunto = 'Wordpress';
+	$destinatario = 'thicoalves@ltdeveloper.com.br';
+	$headers[] = 'Content-Type: text/html; charset=UTF-8';
+	$headers[] = 'From: ' . $params['name'] . ' <' . $params['email'] . '>';
 
-// 	$params = $data->get_params();
-
-// 	$assunto = 'Wordpress';
-// 	$destinatario = 'thicoalves@ltdeveloper.com.br';
-// 	$headers[] = 'Content-Type: text/html; charset=UTF-8';
-// 	$headers[] = 'From: ' . $params['name'] . ' <' . $params['email'] . '>';
-
-// 	try {
-// 		wp_mail($destinatario, $assunto, $params['message'], $headers);
-// 	} catch (\Throwable $th) {
-// 		throw $th;
-// 	}
-
-// 	return $params;
-// }
+	try {
+		wp_mail($destinatario, $assunto, $params['message'], $headers);
+		return $params; 
+	} catch (Exception $e) {
+		return new WP_Error('error', $e->getMessage(), array('status' => 500)); 
+	}
+}
