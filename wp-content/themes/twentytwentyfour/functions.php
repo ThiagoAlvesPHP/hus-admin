@@ -278,14 +278,12 @@ add_action('rest_api_init', function () {
 function enviar_email_contato($data)
 {
 	$params = $data->get_params();
-
-	$assunto = 'Wordpress';
-	$destinatario = 'thicoalves@ltdeveloper.com.br';
-	$headers[] = 'Content-Type: text/html; charset=UTF-8';
+	$headers[] = 'Reply-To: ' . $params['email'];
+	$headers[] = 'X-Mailer: PHP/' . phpversion();
 	$headers[] = 'From: ' . $params['name'] . ' <' . $params['email'] . '>';
 
 	try {
-		wp_mail($destinatario, $assunto, $params['message'], $headers);
+		wp_mail('thiagoalves@ltdeveloper.com.br', "Contato HUS", $params['message']);
 		return $params; 
 	} catch (Exception $e) {
 		return new WP_Error('error', $e->getMessage(), array('status' => 500)); 
