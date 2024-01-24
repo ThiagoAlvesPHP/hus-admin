@@ -289,8 +289,13 @@ function enviar_email_contato($data)
     $message .= '<p>' . $params['message'] . '</p>';
     $message .= '</body></html>';
 
+	$headers = array(
+		'Content-Type: text/html; charset=UTF-8',
+		'MIME-Version: 1.0'
+	);
+
 	try {
-		wp_mail($admin_email, "Contato HUS", $message);
+		wp_mail($admin_email, "Contato HUS", $message, $headers);
 		return $params; 
 	} catch (Exception $e) {
 		error_log('Error Disparo de E-mail: ' . $e->getMessage());
