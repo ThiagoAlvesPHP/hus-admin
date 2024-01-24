@@ -278,14 +278,22 @@ add_action('rest_api_init', function () {
 function enviar_email_contato($data)
 {
 	$params = $data->get_params();
-	$headers[] = 'Reply-To: ' . $params['email'];
-	$headers[] = 'X-Mailer: PHP/' . phpversion();
-	$headers[] = 'From: ' . $params['name'] . ' <' . $params['email'] . '>';
+	$admin_email = get_option('admin_email');
+	$admin_email = sanitize_email($admin_email);
+
+	$message = '<html><body>';
+    $message .= '<h1>Contato HUS</h1>';
+	$message .= '<p>Cliente: '.$params['name'].'</p>';
+	$message .= '<p>E-mail: '.$params['email'].'</p>';
+	$message .= '<p>Telefone: '.$params['phone'].'</p>';
+    $message .= '<p>' . $params['message'] . '</p>';
+    $message .= '</body></html>';
 
 	try {
-		wp_mail('thiagoalves@ltdeveloper.com.br', "Contato HUS", $params['message']);
+		wp_mail($admin_email, "Contato HUS", $message);
 		return $params; 
 	} catch (Exception $e) {
+		error_log('Error Disparo de E-mail: ' . $e->getMessage());
 		return new WP_Error('error', $e->getMessage(), array('status' => 500)); 
 	}
 }
