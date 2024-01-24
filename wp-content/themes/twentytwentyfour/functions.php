@@ -286,6 +286,7 @@ function enviar_email_contato($data)
 	$message .= '<p>Cliente: '.$params['name'].'</p>';
 	$message .= '<p>E-mail: '.$params['email'].'</p>';
 	$message .= '<p>Telefone: '.$params['phone'].'</p>';
+	$message .= (!empty($params['enterprises']))?'<p>Empreendimento: '.$params['enterprises'].'</p>':'';
     $message .= '<p>' . $params['message'] . '</p>';
     $message .= '</body></html>';
 
