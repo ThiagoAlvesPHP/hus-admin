@@ -122,6 +122,11 @@ function h2k_newsletters_settings_page()
     } else {
         h2k_newsletters_list_page();
     }
+    // delete register
+    if (isset($_GET['delete'])) {
+        $id = absint($_GET['delete']);
+        h2k_newsletters_delete($id);
+    }
 }
 
 /**
@@ -131,47 +136,38 @@ function h2k_newsletters_list_page()
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'h2k_newsletters';
-
     // Obtém todos os registros da tabela
     $results = $wpdb->get_results("SELECT * FROM $table_name", ARRAY_A);
+    // disparo de email newsletters
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        ob_start();
+        require 'html/send.php';
+        $html = ob_get_contents();
+        ob_end_clean();
 
-    ?>
-        <div class="wrap">
-            <h2>Configurações de Newsletter H2K</h2>
-            <!-- Conteúdo da sua página de configurações aqui -->
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'MIME-Version: 1.0'
+        );
 
-            <h3>Lista de Registros:</h3>
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th>Ações</th>
-                        <th>Nome</th>
-                        <th>E-mail</th>
-                        <th>Aceito</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Exibe os dados na tabela
-                    foreach ($results as $result) {
-                        echo '<tr>';
-                        echo '<td>';
-                        echo '<a href="' . admin_url('admin.php?page=h2k-newsletters-settings&id=' . $result['id']) . '" class="button">Editar</a>';
-                        echo '<a href="#" class="button button-secondary">Excluir</a>';
-                        echo '</td>';
-                        echo '<td>' . $result['name'] . '</td>';
-                        echo '<td>' . $result['email'] . '</td>';
-                        echo '<td>' . ($result['accepted'] ? 'Sim' : 'Não') . '</td>';
-                        echo '</tr>';
-                    }
-                    ?>
-                </tbody>
-            </table>
-        </div>
-    <?php
+        try {
+            foreach ($results as $value) {
+                wp_mail($value['email'], $_POST['subject'], $html, $headers);
+            }
+        } catch (Exception $e) {
+            error_log('Error Disparo de E-mail: ' . $e->getMessage());
+            return new WP_Error('error', $e->getMessage(), array('status' => 500));
+        }
+        echo '<div class="updated"><p>E-mail enviado com sucesso!</p></div>';
+    }
+
+    require 'html/list.php';
+    require 'html/list-message.php';
 }
 
-
+/**
+ * edit
+ */
 function h2k_newsletters_edit_page()
 {
     global $wpdb;
@@ -205,32 +201,10 @@ function h2k_newsletters_edit_page()
                     array('%d')
                 );
 
-                echo '<div class="updated"><p>Dados atualizados com sucesso!</p></div>';
                 $record = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $id), ARRAY_A);
             }
 
-            ?>
-            <div class="wrap">
-                <h2>Editar Registro</h2>
-                <form method="post">
-                    <table class="form-table">
-                        <tr>
-                            <th><label for="name">Nome</label></th>
-                            <td><input type="text" name="name" id="name" value="<?php echo esc_attr($record['name']); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="email">E-mail</label></th>
-                            <td><input type="email" name="email" id="email" value="<?php echo esc_attr($record['email']); ?>" class="regular-text"></td>
-                        </tr>
-                        <tr>
-                            <th><label for="accepted">Aceito</label></th>
-                            <td><input type="checkbox" name="accepted" id="accepted" value="1" <?php checked($record['accepted'], 1); ?>></td>
-                        </tr>
-                    </table>
-                    <?php submit_button('Atualizar Dados'); ?>
-                </form>
-            </div>
-            <?php
+            require "html/edit.php";
         } else {
             // Se o registro não existe, redireciona para a página principal ou faz algo apropriado
             wp_redirect(admin_url('admin.php?page=h2k-newsletters-settings'));
@@ -241,4 +215,16 @@ function h2k_newsletters_edit_page()
         wp_redirect(admin_url('admin.php?page=h2k-newsletters-settings'));
         exit;
     }
+}
+
+/**
+ * delete
+ */
+function h2k_newsletters_delete($id)
+{
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'h2k_newsletters';
+    $wpdb->get_row($wpdb->prepare("DELETE FROM $table_name WHERE id = %d", $id), ARRAY_A);
+    $redirect = admin_url('admin.php?page=h2k-newsletters-settings');
+    require 'html/delete.php';
 }
